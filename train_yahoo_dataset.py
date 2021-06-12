@@ -4,24 +4,24 @@ import sys
 import math
 import os
 
-from models import NNModel, LinearModel
+from .models import NNModel, LinearModel
 
 # from tqdm import tqdm
 
 from tensorboardX import SummaryWriter
 from progressbar import progressbar
 
-from utils import logsumexp, parse_my_args_reinforce, shuffle_combined, torchify
-from YahooDataReader import YahooDataReader
+from .utils import logsumexp, parse_my_args_reinforce, shuffle_combined, torchify
+from .YahooDataReader import YahooDataReader
 #from log_likelihood_training import log_likelihood_training
 
-from evaluation import compute_dcg, evaluate_model, sample_ranking, compute_average_rank
-from models import convert_vars_to_gpu
+from .evaluation import compute_dcg, evaluate_model, sample_ranking, compute_average_rank
+from .models import convert_vars_to_gpu
 
-from fairness_loss import (get_expected_exposure, minimize_for_k,
+from .fairness_loss import (get_expected_exposure, minimize_for_k,
                            IndividualFairnessLoss, GroupFairnessLoss)
 
-from utils import exp_lr_scheduler
+from .utils import exp_lr_scheduler
 
 
 def log_and_print(model,
@@ -45,7 +45,7 @@ def log_and_print(model,
         deterministic=deterministic,
         gpu_id=args.gpu_id,
         fairness_evaluation=fairness_evaluation,
-        position_bias_vector=1. / np.log2(2 + np.arange(200)),
+        position_bias_vector=1. / np.log2(2 + np.arange(500)),
         writer=writer if exposure_relevance_plot else None,
         epoch_num=epoch,
         group_fairness_evaluation=group_fairness_evaluation,
@@ -146,7 +146,7 @@ def on_policy_training(yahoo_data_reader,
                        experiment_name=None,
                        writer=None,
                        args=None):
-    position_bias_vector = 1. / np.log2(2 + np.arange(200))
+    position_bias_vector = 1. / np.log2(2 + np.arange(500))
     lr = args.lr
     num_epochs = args.epochs
     weight_decay = args.weight_decay
@@ -160,7 +160,7 @@ def on_policy_training(yahoo_data_reader,
                args.lambda_ind_fairness, args.lambda_group_fairness))
     if writer is None and args.summary_writing:
         writer = SummaryWriter(log_dir='runs')
-    from utils import get_optimizer
+    from .utils import get_optimizer
     optimizer = get_optimizer(model.parameters(), lr, args.optimizer,
                               weight_decay)
     train_feats, train_rel = yahoo_data_reader.data
@@ -187,8 +187,7 @@ def on_policy_training(yahoo_data_reader,
         # shuffle(file_list)
         train_feats, train_rel = shuffle_combined(train_feats, train_rel)
 
-        iterator = progressbar(
-            range(len_train_set)) if args.progressbar else range(len_train_set)
+        iterator = progressbar(range(len_train_set)) if args.progressbar else range(len_train_set)
         for i in iterator:
             if i % args.evaluate_interval == 0:
                 if i != 0:

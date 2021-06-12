@@ -195,7 +195,7 @@ class GroupFairnessLoss:
                                             skip_zero=False):
         """
         compute disparity and then compute the gradient coefficients for
-        asymmetric group disaprity loss
+        asymmetric group disparity loss
         """
         # compute average v_i/r_i for each group, then the group which has higher relevance
         group_disparities = []

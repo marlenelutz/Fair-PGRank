@@ -2,11 +2,14 @@ import numpy as np
 import math, sys
 
 from progressbar import progressbar
-from utils import torchify
 import torch
-from models import convert_vars_to_gpu
+# from models import convert_vars_to_gpu
+# from utils import torchify
+from .models import convert_vars_to_gpu
+from .utils import torchify
 
-from fairness_loss import get_exposures
+# from fairness_loss import get_exposures
+from .fairness_loss import get_exposures
 from scipy.optimize import minimize
 from scipy.stats import linregress
 
@@ -166,7 +169,7 @@ def evaluate_model(model,
     relevant_rank_list = []
     if (fairness_evaluation
             or group_fairness_evaluation) and position_bias_vector is None:
-        position_bias_vector = 1. / np.log2(2 + np.arange(200))
+        position_bias_vector = 1. / np.log2(2 + np.arange(500))
     if fairness_evaluation:
         l1_dists = []
         rsq_dists = []
@@ -181,9 +184,7 @@ def evaluate_model(model,
 
     all_exposures = []
     all_rels = []
-    iterator = progressbar(range(
-        len_val_set)) if args is not None and args.progressbar else range(
-            len_val_set)
+    iterator = progressbar(range(len_val_set)) if args is not None and args.progressbar else range(len_val_set)
     for i in iterator:  # for each query
         feats, rel = val_feats[i], val_rel[i]
         if gpu_id is not None:
@@ -244,14 +245,18 @@ def evaluate_model(model,
                 exposure_mean_g1 = np.mean(exposures[group_identities == 1])
                 # print(exposure_mean_g0, exposure_mean_g1)
                 disparity = exposure_mean_g0 / rel_mean_g0 - exposure_mean_g1 / rel_mean_g1
+                #print('disparity: ' + str(disparity))
                 group_exposure_disparity = disparity**2
                 sign = +1 if rel_mean_g0 >= rel_mean_g1 else -1
                 one_sided_group_disparity = max([0, sign * disparity])
+                #print('one sided disp: ' + str(one_sided_group_disparity))
 
                 # print(group_exposure_disparity, exposure_mean_g0,
                 # exposure_mean_g1, rel, group_identities)
                 group_exposure_disparities.append(group_exposure_disparity)
                 group_asym_disparities.append(one_sided_group_disparity)
+
+        #print('group asym disparities: ' + str(group_asym_disparities))
 
         if fairness_evaluation:
             all_exposures.extend(exposures)
@@ -397,7 +402,7 @@ def get_random_ranking_baseline(validation_data_reader,
     relevant_rank_list = []
     if (fairness_evaluation
             or group_fairness_evaluation) and position_bias_vector is None:
-        position_bias_vector = 1. / np.log2(2 + np.arange(200))
+        position_bias_vector = 1. / np.log2(2 + np.arange(500))
     if fairness_evaluation:
         l1_dists = []
         rsq_dists = []
@@ -412,9 +417,7 @@ def get_random_ranking_baseline(validation_data_reader,
 
     all_exposures = []
     all_rels = []
-    iterator = progressbar(range(
-        len_val_set)) if args is not None and args.progressbar else range(
-            len_val_set)
+    iterator = progressbar(range(len_val_set)) if args is not None and args.progressbar else range(len_val_set)
     for i in iterator:  # for each query
         feats, rel = val_feats[i], val_rel[i]
 
